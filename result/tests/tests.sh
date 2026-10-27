@@ -1,20 +1,23 @@
 #!/bin/sh
+set -e
 
-while ! timeout 1 bash -c "echo > /dev/tcp/vote/80"; do
-    sleep 1
+echo "Waiting for vote and result..."
+until curl -sf http://vote > /dev/null; do sleep 1; done
+until curl -sf http://result > /dev/null; do sleep 1; done
+
+echo "Casting a vote for 'b'..."
+curl -sf -X POST --data "vote=b" http://vote > /dev/null
+
+echo "Waiting for the worker to write it to Postgres..."
+for i in $(seq 1 30); do
+  count=$(PGPASSWORD=postgres psql -h db -U postgres -tAc \
+    "SELECT COUNT(*) FROM votes WHERE vote='b';" 2>/dev/null || echo 0)
+  if [ "${count:-0}" -ge 1 ]; then
+    echo "PASS: vote reached the database"
+    exit 0
+  fi
+  sleep 1
 done
 
-curl -sS -X POST --data "vote=b" http://vote > /dev/null
-sleep 10
-
-if phantomjs render.js http://result | grep -q '1 vote'; then
-  echo -e "\\e[42m------------"
-  echo -e "\\e[92mTests passed"
-  echo -e "\\e[42m------------"
-  exit 0
-else
-  echo -e "\\e[41m------------"
-  echo -e "\\e[91mTests failed"
-  echo -e "\\e[41m------------"
-  exit 1
-fi
+echo "FAIL: vote never reached the database"
+exit 1

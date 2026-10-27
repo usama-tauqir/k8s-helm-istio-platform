@@ -1,12 +1,12 @@
-FROM node:8.9-slim
+FROM debian:bookworm-slim
 
-RUN apt-get update -qq && apt-get install -qy \ 
-    ca-certificates \
-    bzip2 \
-    curl \
-    libfontconfig \
-    --no-install-recommends
-RUN yarn global add phantomjs-prebuilt
-ADD . /app
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl ca-certificates postgresql-client \
+ && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
-CMD ["/app/tests.sh"]
+COPY tests.sh .
+# strip Windows line endings in case the file was saved with CRLF
+RUN sed -i 's/\r$//' tests.sh && chmod +x tests.sh
+
+CMD ["./tests.sh"]

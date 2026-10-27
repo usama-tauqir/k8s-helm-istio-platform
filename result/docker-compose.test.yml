@@ -5,28 +5,30 @@ services:
   sut:
     build: ./tests/
     depends_on:
-      - vote
-      - result
-      - worker
+      vote:
+        condition: service_started
+      result:
+        condition: service_started
+      worker:
+        condition: service_started
     networks:
       - front-tier
+      - back-tier
 
   vote:
     build: ../vote/
-    ports: ["80"]
     depends_on:
-      - redis
-      - db
+      redis:
+        condition: service_healthy
     networks:
       - front-tier
       - back-tier
 
   result:
     build: .
-    ports: ["80"]
     depends_on:
-      - redis
-      - db
+      db:
+        condition: service_healthy
     networks:
       - front-tier
       - back-tier
@@ -34,28 +36,33 @@ services:
   worker:
     build: ../worker/
     depends_on:
-      - redis
-      - db
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
     networks:
       - back-tier
 
   redis:
     image: redis:alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
     networks:
       - back-tier
 
   db:
-    image: postgres:9.4
+    image: postgres:15-alpine
     environment:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
-    volumes:
-      - "db-data:/var/lib/postgresql/data"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 10
     networks:
       - back-tier
-
-volumes:
-  db-data:
 
 networks:
   front-tier:
