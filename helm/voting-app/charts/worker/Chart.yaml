@@ -1,0 +1,9 @@
+apiVersion: v2
+name: worker
+description: Worker (.NET) - Redis se vote uthata hai aur Postgres mein likhta hai
+version: 0.1.0
+appVersion: "1.0"
+dependencies:
+  - name: common
+    version: 0.1.0
+    repository: "file://../../../common"

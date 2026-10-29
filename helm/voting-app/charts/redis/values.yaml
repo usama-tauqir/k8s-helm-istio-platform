@@ -1,0 +1,13 @@
+# App ke code mein "redis" hardcoded hai, isliye naam pakka
+fullnameOverride: redis
+
+image:
+  repository: redis
+  tag: 7-alpine
+  pullPolicy: IfNotPresent
+
+port: 6379
+
+resources:
+  requests: { cpu: 50m, memory: 64Mi }
+  limits:   { cpu: 200m, memory: 128Mi }
