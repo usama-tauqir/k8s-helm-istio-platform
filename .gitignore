@@ -6,3 +6,5 @@ obj/
 node_modules/
 
 helm/**/charts/*.tgz
+helm/*.tgz
+helm/*.prov
