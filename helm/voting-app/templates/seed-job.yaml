@@ -1,0 +1,55 @@
+{{- if .Values.seed.enabled }}
+# post-install hook: saari app ban jane ke BAAD fake votes daalta hai.
+# Sirf install par chalta hai, upgrade par nahi.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-seed
+  labels:
+    app.kubernetes.io/name: seed
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: seed
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+      initContainers:
+        - name: wait-for-vote
+          image: {{ .Values.tests.busyboxImage }}
+          command: ["sh", "-c", "until wget -q -O /dev/null {{ .Values.seed.voteUrl }}; do echo waiting for vote; sleep 3; done"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+      containers:
+        - name: seed
+          image: {{ .Values.seed.image }}
+          imagePullPolicy: IfNotPresent
+          # Image ki generate-votes.sh mein vote:8080 hardcoded hai (Compose ke liye).
+          # K8s mein Service "vote" port 80 par hai, isliye ab yahin se chalate hain.
+          workingDir: /seed
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              for f in posta postb posta; do
+                ab -r -n 1000 -c 5 -p "$f" -T "application/x-www-form-urlencoded" {{ .Values.seed.voteUrl }}
+              done
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits:   { cpu: 500m, memory: 128Mi }
+{{- end }}

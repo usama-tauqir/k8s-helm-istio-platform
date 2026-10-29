@@ -1,0 +1,18 @@
+dependencies:
+- name: vote
+  repository: ""
+  version: 0.1.0
+- name: result
+  repository: ""
+  version: 0.1.0
+- name: worker
+  repository: ""
+  version: 0.1.0
+- name: redis
+  repository: ""
+  version: 0.1.0
+- name: db
+  repository: ""
+  version: 0.1.0
+digest: sha256:0a017a4976e27326e78a0ef2d38fa357b2d7831c6f3225444977199af8f41781
+generated: "2026-10-29T21:10:28.8312734+05:00"
