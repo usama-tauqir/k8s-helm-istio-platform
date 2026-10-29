@@ -1,0 +1,35 @@
+# Prod: zyada replicas, HPA, data PVC par, upgrade se pehle backup
+vote:
+  replicaCount: 3                    # HPA on ho to Deployment mein replicas nahi likha jata
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits:   { cpu: "1", memory: 512Mi }
+
+result:
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits:   { cpu: 500m, memory: 256Mi }
+
+worker:
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits:   { cpu: 500m, memory: 256Mi }
+
+db:
+  persistence:
+    enabled: true
+    size: 5Gi
+  resources:
+    requests: { cpu: 250m, memory: 256Mi }
+    limits:   { cpu: "1", memory: 1Gi }
+
+seed:
+  enabled: false
+
+backup:
+  enabled: true

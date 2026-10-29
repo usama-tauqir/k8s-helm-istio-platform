@@ -1,0 +1,61 @@
+{{- if .Values.backup.enabled }}
+# pre-upgrade hook: upgrade shuru hone se PEHLE database ka dump.
+# Weight -5 = dusre pre-upgrade hooks se pehle.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-db-backup
+  labels:
+    app.kubernetes.io/name: db-backup
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    # hook-succeeded nahi lagaya taa ke "kubectl logs job/..." se dump dekh sako
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: db-backup
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 70                # postgres alpine image ka "postgres" user
+      containers:
+        - name: pg-dump
+          image: {{ .Values.backup.image }}
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef: { name: {{ .Values.global.dbSecretName }}, key: POSTGRES_USER }
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef: { name: {{ .Values.global.dbSecretName }}, key: POSTGRES_PASSWORD }
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              FILE=/backup/postgres-$(date +%Y%m%d-%H%M%S).sql.gz
+              pg_dump -h db -U "$POSTGRES_USER" postgres | gzip > "$FILE"
+              echo "Backup ban gaya: $FILE"
+              ls -lh /backup
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+          volumeMounts:
+            - name: backup
+              mountPath: /backup
+      volumes:
+        - name: backup
+          {{- if .Values.backup.existingClaim }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.backup.existingClaim }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+{{- end }}

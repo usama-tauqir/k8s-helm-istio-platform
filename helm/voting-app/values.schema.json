@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["dbAuth", "vote", "db"],
+  "properties": {
+    "dbAuth": {
+      "type": "object",
+      "required": ["username", "password"],
+      "properties": {
+        "username": { "type": "string", "minLength": 1 },
+        "password": {
+          "type": "string",
+          "minLength": 6,
+          "description": "Postgres password, --set dbAuth.password=... se do"
+        }
+      }
+    },
+    "vote": {
+      "type": "object",
+      "properties": {
+        "replicaCount": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "env": {
+          "type": "object",
+          "required": ["OPTION_A", "OPTION_B"],
+          "properties": {
+            "OPTION_A": { "type": "string", "minLength": 1 },
+            "OPTION_B": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "db": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "persistence": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "size": { "type": "string", "pattern": "^[0-9]+Gi$" }
+          }
+        }
+      }
+    }
+  }
+}

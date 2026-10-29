@@ -1,0 +1,19 @@
+{{- if .Values.db.enabled }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ .Release.Name }}-test-db
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  restartPolicy: Never
+  securityContext: { runAsNonRoot: true, runAsUser: 70 }
+  containers:
+    - name: pg-isready
+      image: {{ .Values.tests.postgresImage }}
+      command: ["pg_isready", "-h", "db", "-p", "{{ .Values.dbService.port }}"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities: { drop: ["ALL"] }
+{{- end }}

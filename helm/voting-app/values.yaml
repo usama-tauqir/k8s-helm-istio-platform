@@ -1,0 +1,55 @@
+# ------------------------------------------------------------------
+# global: parent aur SAARE subcharts .Values.global.* se parh sakte hain
+# ------------------------------------------------------------------
+global:
+  dbSecretName: voting-db-secret
+  imageRegistry: ""                  # abhi istemal nahi; Phase 6 (CI + GHCR) mein
+
+# Parent ka apna Secret (templates/secret.yaml) inhi se banta hai
+dbAuth:
+  username: postgres
+  password: ""                       # required: --set dbAuth.password=... se dena
+
+# ------------------------------------------------------------------
+# Subchart values: key = subchart ka naam. Yahan likhi value
+# subchart ki apni values.yaml ko override karti hai.
+# ------------------------------------------------------------------
+vote:
+  replicaCount: 2
+  env:
+    OPTION_A: Cats
+    OPTION_B: Dogs
+  autoscaling:
+    enabled: false
+
+result: {}
+
+worker: {}
+
+redis:
+  enabled: true                      # Chart.yaml ki "condition: redis.enabled"
+
+db:
+  enabled: true                      # Chart.yaml ki "condition: db.enabled"
+  persistence:
+    enabled: true
+    size: 1Gi
+
+# dbService: db subchart se import-values ke zariye khud aata hai (port 5432)
+
+# ------------------------------------------------------------------
+# Hooks (parent ke templates/)
+# ------------------------------------------------------------------
+seed:
+  enabled: false                     # post-install: fake votes (sirf dev)
+  image: voting/seed:1.0
+  voteUrl: http://vote/              # Service "vote" port 80 -> pod 8080
+
+backup:
+  enabled: false                     # pre-upgrade: pg_dump
+  image: postgres:15-alpine
+  existingClaim: ""                  # khali = emptyDir (sirf demo; pod ke saath dump bhi khatam)
+
+tests:
+  busyboxImage: busybox:1.36
+  postgresImage: postgres:15-alpine

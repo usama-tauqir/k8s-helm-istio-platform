@@ -1,0 +1,18 @@
+Voting app install ho gayi: release "{{ .Release.Name }}", namespace "{{ .Release.Namespace }}"
+
+Browser mein kholne ke liye (do alag terminal):
+  kubectl port-forward -n {{ .Release.Namespace }} svc/vote   8080:80   ->  http://localhost:8080
+  kubectl port-forward -n {{ .Release.Namespace }} svc/result 8081:80   ->  http://localhost:8081
+
+Vote options: {{ .Values.vote.env.OPTION_A }} vs {{ .Values.vote.env.OPTION_B }}
+{{- if .Values.db.enabled }}
+Database: db:{{ .Values.dbService.port }} (port db chart se import-values ke zariye aaya)
+{{- if not .Values.db.persistence.enabled }}
+  WARNING: persistence band hai - db pod restart hua to saare votes khatam.
+{{- end }}
+{{- end }}
+{{- if .Values.seed.enabled }}
+Seed job fake votes daal raha hai:  kubectl get jobs -n {{ .Release.Namespace }} -w
+{{- end }}
+
+Health check:  helm test {{ .Release.Name }} -n {{ .Release.Namespace }} --logs

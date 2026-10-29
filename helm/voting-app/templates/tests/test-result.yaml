@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ .Release.Name }}-test-result
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  restartPolicy: Never
+  securityContext: { runAsNonRoot: true, runAsUser: 65534 }
+  containers:
+    - name: wget
+      image: {{ .Values.tests.busyboxImage }}
+      command: ["sh", "-c", "wget -q -O /dev/null http://result:80/ && echo 'result OK'"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities: { drop: ["ALL"] }

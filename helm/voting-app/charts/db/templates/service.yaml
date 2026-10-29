@@ -11,7 +11,7 @@ spec:
     {{- include "common.selectorLabels" . | nindent 4 }}
   ports:
     - name: postgres
-      port: {{ .Values.port }}
+      port: {{ .Values.service.port }}
       targetPort: postgres
 ---
 # 2) Headless Service: StatefulSet ke pods ko pakka DNS naam deta hai (db-0.db-headless)
@@ -27,5 +27,5 @@ spec:
     {{- include "common.selectorLabels" . | nindent 4 }}
   ports:
     - name: postgres
-      port: {{ .Values.port }}
+      port: {{ .Values.service.port }}
       targetPort: postgres

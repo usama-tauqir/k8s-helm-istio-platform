@@ -6,7 +6,9 @@ image:
   tag: 15-alpine
   pullPolicy: IfNotPresent
 
-port: 5432
+# import-values: parent isay .Values.dbService.port se parhta hai
+service:
+  port: 5432
 
 persistence:
   enabled: true          # false = emptyDir (pod marte hi data gaya, sirf testing ke liye)
