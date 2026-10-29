@@ -1,0 +1,58 @@
+{{- if .Values.istio.enabled }}
+{{- $i := .Values.istio }}
+{{- if ne (add (int $i.canary.v1Weight) (int $i.canary.v2Weight)) 100 }}
+{{- fail "istio.canary.v1Weight + v2Weight ka jor 100 hona chahiye" }}
+{{- end }}
+{{- $fault := and $i.fault.enabled (or (gt (int $i.fault.delayPercent) 0) (gt (int $i.fault.abortPercent) 0)) }}
+# Rules upar se neeche check hote hain; pehla match jeetta hai.
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: vote
+spec:
+  hosts:
+    - {{ $i.hosts.vote | quote }}       # gateway se (browser/curl)
+    - vote                              # mesh ke andar se (fortio, seed)
+  gateways:
+    - voting-gateway
+    - mesh
+  http:
+    {{- if $i.darkRelease.enabled }}
+    # 1) Dark release: sirf header wale (beta users) v2 par
+    - name: dark-release
+      match:
+        - headers:
+            {{ $i.darkRelease.header }}:
+              exact: {{ $i.darkRelease.value | quote }}
+      route:
+        - destination:
+            host: vote
+            subset: v2
+    {{- end }}
+    # 2) Baqi sab: weighted canary
+    - name: canary
+      {{- if $fault }}
+      fault:
+        {{- if gt (int $i.fault.delayPercent) 0 }}
+        delay:
+          percentage:
+            value: {{ $i.fault.delayPercent }}
+          fixedDelay: {{ $i.fault.delaySeconds }}s
+        {{- end }}
+        {{- if gt (int $i.fault.abortPercent) 0 }}
+        abort:
+          percentage:
+            value: {{ $i.fault.abortPercent }}
+          httpStatus: {{ $i.fault.abortCode }}
+        {{- end }}
+      {{- end }}
+      route:
+        - destination:
+            host: vote
+            subset: v1
+          weight: {{ $i.canary.v1Weight }}
+        - destination:
+            host: vote
+            subset: v2
+          weight: {{ $i.canary.v2Weight }}
+{{- end }}

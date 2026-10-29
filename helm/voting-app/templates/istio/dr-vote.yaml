@@ -1,0 +1,40 @@
+{{- if .Values.istio.enabled }}
+{{- $i := .Values.istio }}
+# Subsets = pods ke "version" label. trafficPolicy upar hai, isliye dono subsets par lagti hai.
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: vote
+spec:
+  host: vote
+  {{- if or $i.stickySessions.enabled $i.circuitBreaker.enabled }}
+  trafficPolicy:
+    {{- if $i.stickySessions.enabled }}
+    loadBalancer:
+      consistentHash:
+        httpCookie:
+          name: {{ $i.stickySessions.cookie }}
+          ttl: 0s
+    {{- end }}
+    {{- if $i.circuitBreaker.enabled }}
+    connectionPool:
+      tcp:
+        maxConnections: {{ $i.circuitBreaker.maxConnections }}
+      http:
+        http1MaxPendingRequests: {{ $i.circuitBreaker.maxPendingRequests }}
+        maxRequestsPerConnection: 1
+    outlierDetection:
+      consecutive5xxErrors: {{ $i.circuitBreaker.consecutive5xxErrors }}
+      interval: {{ $i.circuitBreaker.interval }}
+      baseEjectionTime: {{ $i.circuitBreaker.baseEjectionTime }}
+      maxEjectionPercent: 100
+    {{- end }}
+  {{- end }}
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+    - name: v2
+      labels:
+        version: v2
+{{- end }}

@@ -12,6 +12,10 @@ dependencies:
     version: 0.1.0
   - name: result
     version: 0.1.0
+  - name: vote                       # wahi vote chart, doosri dafa (Helm alias)
+    alias: vote-v2
+    version: 0.1.0
+    condition: vote-v2.enabled
   - name: worker
     version: 0.1.0
   - name: redis

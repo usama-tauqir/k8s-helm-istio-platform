@@ -5,6 +5,9 @@ dependencies:
 - name: result
   repository: ""
   version: 0.1.0
+- name: vote
+  repository: ""
+  version: 0.1.0
 - name: worker
   repository: ""
   version: 0.1.0
@@ -14,5 +17,5 @@ dependencies:
 - name: db
   repository: ""
   version: 0.1.0
-digest: sha256:0a017a4976e27326e78a0ef2d38fa357b2d7831c6f3225444977199af8f41781
-generated: "2026-10-29T21:10:28.8312734+05:00"
+digest: sha256:f88fb47fa45e9a36c6972ce9707da27171c5e84beac58c58614f9dc0af9cb4e6
+generated: "2026-10-30T01:32:46.2280663+05:00"

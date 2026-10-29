@@ -1,0 +1,28 @@
+{{- if and .Values.istio.enabled .Values.istio.prefixRouting.enabled }}
+# Experiment: ek host par path se routing. /result -> result (prefix hata kar), baqi -> vote.
+# Dekhna: CSS/JS aur /socket.io kyun toot-te hain (app absolute paths use karti hai).
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: apps-prefix
+spec:
+  hosts:
+    - {{ .Values.istio.prefixRouting.host | quote }}
+  gateways:
+    - voting-gateway
+  http:
+    - name: result-prefix
+      match:
+        - uri:
+            prefix: /result
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: result
+    - name: default-vote
+      route:
+        - destination:
+            host: vote
+            subset: v1
+{{- end }}

@@ -1,0 +1,15 @@
+{{- if .Values.istio.enabled }}
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: result
+spec:
+  hosts:
+    - {{ .Values.istio.hosts.result | quote }}
+  gateways:
+    - voting-gateway
+  http:
+    - route:
+        - destination:
+            host: result
+{{- end }}

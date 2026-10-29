@@ -5,13 +5,17 @@ metadata:
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
+    {{- if not .Values.istio.injectHooks }}
+    sidecar.istio.io/inject: "false"
+    {{- end }}
 spec:
+  serviceAccountName: {{ .Release.Name }}-ops
   restartPolicy: Never
   securityContext: { runAsNonRoot: true, runAsUser: 65534 }
   containers:
     - name: wget
       image: {{ .Values.tests.busyboxImage }}
-      command: ["sh", "-c", "wget -q -O - http://vote:80/ | grep -q '{{ .Values.vote.env.OPTION_A }}' && echo 'vote OK'"]
+      command: ["sh", "-c", "wget -q -O - http://vote:80/ | grep -q 'name=\"vote\"' && echo 'vote OK'"]
       securityContext:
         allowPrivilegeEscalation: false
         capabilities: { drop: ["ALL"] }

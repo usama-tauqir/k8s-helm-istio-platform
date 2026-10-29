@@ -1,0 +1,81 @@
+{{- if and .Values.istio.enabled .Values.istio.authorization.enabled }}
+{{- $sa := printf "cluster.local/ns/%s/sa" .Release.Namespace }}
+{{- $ops := printf "%s/%s-ops" $sa .Release.Name }}
+{{- $gw := .Values.istio.gateway.principal }}
+# 1) Default: namespace mein sab band (khali spec = koi rule match nahi = deny)
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: deny-all
+spec: {}
+---
+# 2) vote (v1 + v2): sirf ingress gateway aur ops (seed, helm test)
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-vote
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vote
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - {{ $gw | quote }}
+              - {{ $ops | quote }}
+---
+# 3) result: sirf ingress gateway aur ops (helm test)
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-result
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: result
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - {{ $gw | quote }}
+              - {{ $ops | quote }}
+---
+# 4) redis: sirf vote (v1, v2) aur worker
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-redis
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - {{ printf "%s/vote" $sa | quote }}
+              - {{ printf "%s/vote-v2" $sa | quote }}
+              - {{ printf "%s/worker" $sa | quote }}
+---
+# 5) db: sirf worker, result aur ops (backup hook, test-db)
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-db
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: db
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - {{ printf "%s/worker" $sa | quote }}
+              - {{ printf "%s/result" $sa | quote }}
+              - {{ $ops | quote }}
+{{- end }}

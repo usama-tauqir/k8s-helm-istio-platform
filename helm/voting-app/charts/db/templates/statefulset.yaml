@@ -14,8 +14,9 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "common.selectorLabels" . | nindent 8 }}
+        {{- include "common.podLabels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ include "common.serviceAccountName" . }}
       containers:
         - name: postgres
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -27,14 +28,14 @@ spec:
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
           ports:
-            - name: postgres
+            - name: tcp-postgres
               containerPort: {{ .Values.service.port }}
           readinessProbe:
             exec: { command: ["pg_isready", "-U", "postgres"] }
             initialDelaySeconds: 5
             periodSeconds: 5
           livenessProbe:
-            tcpSocket: { port: postgres }
+            tcpSocket: { port: tcp-postgres }
             initialDelaySeconds: 20
             periodSeconds: 10
           resources:

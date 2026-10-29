@@ -5,7 +5,11 @@ metadata:
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
+    {{- if not .Values.istio.injectHooks }}
+    sidecar.istio.io/inject: "false"
+    {{- end }}
 spec:
+  serviceAccountName: {{ .Release.Name }}-ops
   restartPolicy: Never
   securityContext: { runAsNonRoot: true, runAsUser: 65534 }
   containers:

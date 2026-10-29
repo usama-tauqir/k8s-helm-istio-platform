@@ -9,6 +9,7 @@ image:
 containerPort: 8080           # Phase 1 mein non-root ke liye chuna
 
 service:
+  enabled: true               # vote-v2 (alias) mein false: ek hi Service dono versions ko select karti hai
   type: ClusterIP
   port: 80
 
@@ -36,3 +37,10 @@ securityContext:
 
 podAnnotations: {}
 fullnameOverride: ""
+nameOverride: ""              # vote-v2 mein "vote", taa ke selector label vote Service se match kare
+
+# Experiment E (outlier detection): jaan boojh kar kharab pod.
+# App mein redis host hardcoded hai, isliye env nahi; /etc/hosts mein "redis" ko 127.0.0.1 kar dete hain.
+hostAliases: []
+#  - ip: 127.0.0.1
+#    hostnames: ["redis"]

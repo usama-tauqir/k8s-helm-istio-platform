@@ -14,5 +14,12 @@ Database: db:{{ .Values.dbService.port }} (port db chart se import-values ke zar
 {{- if .Values.seed.enabled }}
 Seed job fake votes daal raha hai:  kubectl get jobs -n {{ .Release.Namespace }} -w
 {{- end }}
+{{- if .Values.istio.enabled }}
+
+Istio gateway se (subdomain routing):
+  kubectl port-forward -n istio-ingress svc/istio-ingress 8080:80
+  curl.exe -H "Host: {{ .Values.istio.hosts.vote }}" http://localhost:8080/
+  canary: v1={{ .Values.istio.canary.v1Weight }}% v2={{ .Values.istio.canary.v2Weight }}% | mTLS: {{ .Values.istio.mtls.mode }} | authz: {{ .Values.istio.authorization.enabled }}
+{{- end }}
 
 Health check:  helm test {{ .Release.Name }} -n {{ .Release.Namespace }} --logs

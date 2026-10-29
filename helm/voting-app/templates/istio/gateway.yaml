@@ -1,0 +1,23 @@
+{{- if .Values.istio.enabled }}
+{{- $i := .Values.istio }}
+# Edge proxy: bahar se aane wali HTTP traffic istio-ingress gateway pods par.
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: voting-gateway
+spec:
+  selector:
+    {{- toYaml $i.gateway.selector | nindent 4 }}
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        {{- range $name, $host := $i.hosts }}
+        - {{ $host | quote }}             # {{ $name }}
+        {{- end }}
+        {{- if $i.prefixRouting.enabled }}
+        - {{ $i.prefixRouting.host | quote }}
+        {{- end }}
+{{- end }}

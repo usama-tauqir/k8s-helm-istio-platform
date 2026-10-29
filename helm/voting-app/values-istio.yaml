@@ -1,0 +1,7 @@
+# Phase 4: Istio on + vote v2 canary pods
+#   helm upgrade voting ./voting-app -n voting -f voting-app/values-dev.yaml -f voting-app/values-istio.yaml --set dbAuth.password=postgres
+istio:
+  enabled: true
+
+vote-v2:
+  enabled: true

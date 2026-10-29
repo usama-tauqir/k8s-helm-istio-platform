@@ -22,6 +22,21 @@ vote:
   autoscaling:
     enabled: false
 
+# vote v2 (canary): wahi vote chart, alias ke saath. Apni Service nahi banata;
+# v1 ki "vote" Service dono ke pods select karti hai (nameOverride: vote se).
+vote-v2:
+  enabled: false                     # values-istio.yaml mein true
+  fullnameOverride: vote-v2
+  nameOverride: vote
+  version: v2
+  replicaCount: 1
+  env:
+    OPTION_A: Tea
+    OPTION_B: Coffee
+  service:
+    enabled: false
+  hostAliases: []                    # Experiment E: [{ip: 127.0.0.1, hostnames: [redis]}]
+
 result: {}
 
 worker: {}
@@ -44,6 +59,8 @@ seed:
   enabled: false                     # post-install: fake votes (sirf dev)
   image: voting/seed:1.0
   voteUrl: http://vote/              # Service "vote" port 80 -> pod 8080
+  requests: 1000                     # har round mein kitne votes (3 rounds)
+  concurrency: 5                     # ek waqt mein kitni requests; zyada = dev ka chhota vote pod ghut jata hai
 
 backup:
   enabled: false                     # pre-upgrade: pg_dump
@@ -53,3 +70,51 @@ backup:
 tests:
   busyboxImage: busybox:1.36
   postgresImage: postgres:15-alpine
+
+# ------------------------------------------------------------------
+# Istio (Phase 4). Har file templates/istio/ mein "if .Values.istio.enabled" se shuru.
+# ------------------------------------------------------------------
+istio:
+  enabled: false
+  gateway:
+    selector:
+      istio: ingress                 # kubectl get pods -n istio-ingress --show-labels
+    # Ingress gateway ki identity (AuthorizationPolicy mein allow)
+    principal: cluster.local/ns/istio-ingress/sa/istio-ingress
+  hosts:
+    vote: vote.local
+    result: result.local
+  prefixRouting:                     # Experiment: ek host, / -> vote, /result -> result
+    enabled: false
+    host: apps.local
+  canary:
+    v1Weight: 100
+    v2Weight: 0
+  darkRelease:
+    enabled: false
+    header: x-beta
+    value: "true"
+  stickySessions:
+    enabled: false
+    cookie: voter_id                 # vote app yeh cookie khud deti hai (vote/app.py)
+  fault:
+    enabled: false
+    delaySeconds: 3
+    delayPercent: 0
+    abortPercent: 0
+    abortCode: 500
+  circuitBreaker:
+    enabled: false
+    maxConnections: 10
+    maxPendingRequests: 5
+    consecutive5xxErrors: 3
+    interval: 10s
+    baseEjectionTime: 30s
+  mtls:
+    mode: PERMISSIVE                 # PERMISSIVE | STRICT
+  authorization:
+    enabled: false
+  # Hooks/test pods mein sidecar? Istio 1.27+ native sidecars se Jobs khatam ho jaate hain,
+  # isliye true theek hai. false = purana tareeqa (sidecar.istio.io/inject: "false"),
+  # magar phir STRICT mTLS mein yeh pods mesh services tak nahi pahunch sakte.
+  injectHooks: true

@@ -8,6 +8,6 @@ spec:
   selector:
     {{- include "common.selectorLabels" . | nindent 4 }}
   ports:
-    - name: redis
+    - name: tcp-redis
       port: {{ .Values.port }}
-      targetPort: redis
+      targetPort: tcp-redis

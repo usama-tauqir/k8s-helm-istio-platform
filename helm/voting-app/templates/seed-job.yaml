@@ -19,12 +19,19 @@ spec:
       labels:
         app.kubernetes.io/name: seed
         app.kubernetes.io/instance: {{ .Release.Name }}
+      {{- if not .Values.istio.injectHooks }}
+      annotations:
+        sidecar.istio.io/inject: "false"
+      {{- end }}
     spec:
+      serviceAccountName: {{ .Release.Name }}-ops
       restartPolicy: Never
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
       initContainers:
+        # Hook pods banne ke baad chalta hai, pods ke READY hone ke baad nahi,
+        # isliye pehle vote ke jawab dene ka intezar
         - name: wait-for-vote
           image: {{ .Values.tests.busyboxImage }}
           command: ["sh", "-c", "until wget -q -O /dev/null {{ .Values.seed.voteUrl }}; do echo waiting for vote; sleep 3; done"]
@@ -35,8 +42,9 @@ spec:
         - name: seed
           image: {{ .Values.seed.image }}
           imagePullPolicy: IfNotPresent
-          # Image ki generate-votes.sh mein vote:8080 hardcoded hai (Compose ke liye).
-          # K8s mein Service "vote" port 80 par hai, isliye ab yahin se chalate hain.
+          # Image ki generate-votes.sh par bharosa nahi karte (us mein port hardcoded hai).
+          # Wahi kaam yahan: posta/postb files image ke /seed folder mein bani hoti hain.
+          # Service "vote" port 80 par sunti hai (-> pod 8080).
           workingDir: /seed
           command:
             - sh
@@ -44,7 +52,7 @@ spec:
             - |
               set -e
               for f in posta postb posta; do
-                ab -r -n 1000 -c 5 -p "$f" -T "application/x-www-form-urlencoded" {{ .Values.seed.voteUrl }}
+                ab -r -n {{ .Values.seed.requests | default 1000 }} -c {{ .Values.seed.concurrency | default 5 }} -p "$f" -T "application/x-www-form-urlencoded" {{ .Values.seed.voteUrl }}
               done
           securityContext:
             allowPrivilegeEscalation: false

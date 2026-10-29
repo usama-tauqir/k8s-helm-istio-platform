@@ -20,7 +20,12 @@ spec:
       labels:
         app.kubernetes.io/name: db-backup
         app.kubernetes.io/instance: {{ .Release.Name }}
+      {{- if not .Values.istio.injectHooks }}
+      annotations:
+        sidecar.istio.io/inject: "false"
+      {{- end }}
     spec:
+      serviceAccountName: {{ .Release.Name }}-ops
       restartPolicy: Never
       securityContext:
         runAsNonRoot: true
