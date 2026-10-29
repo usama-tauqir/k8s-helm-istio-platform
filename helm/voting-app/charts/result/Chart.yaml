@@ -1,0 +1,9 @@
+apiVersion: v2
+name: result
+description: Result frontend (Node.js) - Postgres se parh kar live result dikhata hai
+version: 0.1.0
+appVersion: "1.0"
+dependencies:
+  - name: common
+    version: 0.1.0
+    repository: "file://../../../common"

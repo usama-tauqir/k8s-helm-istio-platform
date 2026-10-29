@@ -1,0 +1,9 @@
+apiVersion: v2
+name: db
+description: Postgres - votes ka pakka record (StatefulSet)
+version: 0.1.0
+appVersion: "15"
+dependencies:
+  - name: common
+    version: 0.1.0
+    repository: "file://../../../common"

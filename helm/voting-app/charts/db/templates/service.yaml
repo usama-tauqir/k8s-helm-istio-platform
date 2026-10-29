@@ -1,0 +1,31 @@
+{{- $fullname := include "common.fullname" . }}
+# 1) Normal Service "db": app isi naam se Postgres dhoondhti hai
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullname }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "common.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: postgres
+      port: {{ .Values.port }}
+      targetPort: postgres
+---
+# 2) Headless Service: StatefulSet ke pods ko pakka DNS naam deta hai (db-0.db-headless)
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullname }}-headless
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  selector:
+    {{- include "common.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: postgres
+      port: {{ .Values.port }}
+      targetPort: postgres

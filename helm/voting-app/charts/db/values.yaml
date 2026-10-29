@@ -1,0 +1,21 @@
+# App ke code mein "db" hardcoded hai, isliye naam pakka
+fullnameOverride: db
+
+image:
+  repository: postgres
+  tag: 15-alpine
+  pullPolicy: IfNotPresent
+
+port: 5432
+
+persistence:
+  enabled: true          # false = emptyDir (pod marte hi data gaya, sirf testing ke liye)
+  size: 1Gi
+  storageClass: ""       # khali = cluster ki default StorageClass
+
+resources:
+  requests: { cpu: 100m, memory: 128Mi }
+  limits:   { cpu: 500m, memory: 512Mi }
+
+global:
+  dbSecretName: db-secret

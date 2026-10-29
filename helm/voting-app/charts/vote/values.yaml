@@ -1,0 +1,38 @@
+replicaCount: 2
+version: v1                   # Istio canary ke liye pod label
+
+image:
+  repository: voting/vote
+  tag: ""                     # khali = Chart.yaml ka appVersion (1.0)
+  pullPolicy: IfNotPresent
+
+containerPort: 8080           # Phase 1 mein non-root ke liye chuna
+
+service:
+  type: ClusterIP
+  port: 80
+
+env:
+  OPTION_A: Cats
+  OPTION_B: Dogs
+
+# gunicorn 4 workers chalata hai, isliye 256Mi kam par sakta hai
+resources:
+  requests: { cpu: 50m, memory: 128Mi }
+  limits:   { cpu: 500m, memory: 512Mi }
+
+probes:
+  enabled: true
+  path: /
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPU: 70
+
+securityContext:
+  readOnlyRootFilesystem: false   # gunicorn /tmp mein likhta hai
+
+podAnnotations: {}
+fullnameOverride: ""

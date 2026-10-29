@@ -1,0 +1,9 @@
+apiVersion: v2
+name: vote
+description: Vote frontend (Python/Flask) - user Cats ya Dogs chunta hai, vote Redis mein jata hai
+version: 0.1.0
+appVersion: "1.0"
+dependencies:
+  - name: common
+    version: 0.1.0
+    repository: "file://../../../common"

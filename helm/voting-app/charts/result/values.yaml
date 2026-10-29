@@ -1,0 +1,35 @@
+# socket.io ko multiple replicas ke liye sticky sessions chahiye, isliye 1
+replicaCount: 1
+version: v1
+
+image:
+  repository: voting/result
+  tag: ""
+  pullPolicy: IfNotPresent
+
+containerPort: 8080
+
+service:
+  type: ClusterIP
+  port: 80
+
+env: {}
+
+resources:
+  requests: { cpu: 50m, memory: 64Mi }
+  limits:   { cpu: 300m, memory: 256Mi }
+
+probes:
+  enabled: true
+  path: /
+
+securityContext:
+  readOnlyRootFilesystem: false
+
+podAnnotations: {}
+fullnameOverride: ""
+
+# global: parent (umbrella) chart yahan se override karega (Step 3.4).
+# Akele chart test karne ke liye yeh default kaam aata hai.
+global:
+  dbSecretName: db-secret
