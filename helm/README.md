@@ -18,7 +18,7 @@ flowchart TD
     W -.uses.-> C
     RE -.uses.-> C
     D -.uses.-> C
-    D -. import-values: service.port .-> U
+    D -.->|import-values| U
 ```
 
 ```
